@@ -5,8 +5,8 @@ class Cohort
   def self.all_by_week(weeks)
     [].tap do |cohorts|
       weeks.times do |week|
-        week_start_date = week_start_date(latest_order_date, week)
-        week_end_date = week_end_date(latest_order_date, week)
+        week_start_date = week_start_date(latest_user_date, week)
+        week_end_date = week_end_date(latest_user_date, week)
         cohort = Cohort.new(week_start_date, week_end_date, week)
 
         cohorts.push cohort
@@ -23,11 +23,25 @@ class Cohort
     @orders = { orderers: [], first_timers: [] }
 
     begin
-      week_start_date = Cohort.week_start_date(@end_date, week)
-      week_end_date = Cohort.week_end_date(@end_date, week)
+      orderers = 0
+      first_timers = 0
 
-      @orders[:orderers].unshift Order.registered_between(week_start_date, week_end_date).from_user_ids(user_ids).count
-      @orders[:first_timers].unshift Order.registered_between(week_start_date, week_end_date).from_user_ids(user_ids).unique_per_user.count
+      users_by_day.each do |date, users|
+        user_ids = users.map(&:id)
+        date = date.gsub("_", "-").to_date
+
+        week_start_date = Cohort.week_start_date(date, week)
+        week_end_date = Cohort.week_end_date(date, week)
+
+        first_timers += Order.registered_between(week_start_date, week_end_date).from_user_ids(user_ids).unique_per_user.count
+      end
+
+      week_start_date = Cohort.week_start_date(@start_date, week)
+      week_end_date = Cohort.week_end_date(@end_date, week)
+      orderers += Order.registered_between(week_start_date, week_end_date).unique_per_user.count
+
+      @orders[:orderers].unshift orderers
+      @orders[:first_timers].unshift first_timers
 
       week -= 1
     end while week >= 0
@@ -35,8 +49,8 @@ class Cohort
 
   private
 
-  def self.latest_order_date
-    @latest_order_date ||= Order.latest.created_at
+  def self.latest_user_date
+    @latest_user_date ||= User.latest.created_at
   end
 
   def self.week_end_date(date, week)
@@ -44,15 +58,15 @@ class Cohort
   end
 
   def self.week_start_date(date, week)
-    date.beginning_of_day - (week * 7 + 7).days
-  end
-
-  def user_ids
-    @user_ids ||= users.map(&:id)
+    date.beginning_of_day - (week * 7 + 6).days
   end
 
   def users
     @users ||= User.registered_between(start_date, end_date)
+  end
+
+  def users_by_day
+    @users_by_day ||= users.group_by { |user| user.created_at.strftime("%Y_%m_%d") }
   end
 
 end

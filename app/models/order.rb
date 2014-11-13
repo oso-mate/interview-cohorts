@@ -6,8 +6,4 @@ class Order < ActiveRecord::Base
   scope :from_user_ids, ->(user_ids) { where user_id: user_ids }
 
   scope :unique_per_user, ->{ select(:user_id).distinct }
-
-  def self.latest
-    Order.order("created_at DESC").first
-  end
 end

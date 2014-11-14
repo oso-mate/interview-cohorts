@@ -20,7 +20,7 @@ class Cohort
     @date = "#{start_date.strftime("%m/%d")} - #{end_date.strftime("%m/%d")}"
 
     @registered_users = users.length
-    @orders = { orderers: [], first_timers: [] }
+    @orders = { orderers: [], first_timers: [], orderers_percentages: [], first_timers_percentages: [] }
 
     begin
       orderers = 0
@@ -40,6 +40,9 @@ class Cohort
 
       @orders[:orderers].unshift orderers
       @orders[:first_timers].unshift first_timers
+
+      @orders[:orderers_percentages].unshift (orderers.to_f / @registered_users.to_f * 100).ceil
+      @orders[:first_timers_percentages].unshift (first_timers.to_f / @registered_users.to_f * 100).ceil
 
       week -= 1
     end while week >= 0

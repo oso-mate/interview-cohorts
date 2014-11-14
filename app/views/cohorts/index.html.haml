@@ -18,7 +18,7 @@
         - @weeks.times do |index|
           %td
             - if cohort.orders[:orderers][index]
-              ordered (#{cohort.orders[:orderers][index]})
+              #{cohort.orders[:orderers_percentages][index]}% orderers (#{cohort.orders[:orderers][index]})
             - if cohort.orders[:first_timers][index]
               %br
-              first timers (#{cohort.orders[:first_timers][index]})
+              #{cohort.orders[:first_timers_percentages][index]}% first timers (#{cohort.orders[:first_timers][index]})
